@@ -1,0 +1,48 @@
+name: CI
+on:
+    push:
+        branches: [main]
+
+jobs:
+    build:
+        runs-on: ubuntu-latest
+        steps:
+            - name: Checkout code
+              uses: actions/checkout@v4
+
+            - name: Setup java 5
+              run: |
+                 chmod +x jdk-1_5_0_22-linux-amd64.bin 
+                 ./jdk-1_5_0_22-linux-amd64.bin > /dev/null < <(echo yes)
+                 mv jdk1.5.0_22 /opt/jdk1.5.0_22
+
+            - name: Setup java 5 environment
+              run: |
+                 echo "JAVA_HOME=/opt/jdk1.5.0_22" >> $GITHUB_ENV
+                 echo "PATH=/opt/jdk1.5.0_22/bin:$PATH" >> $GITHUB_ENV
+              shell: bash
+            
+            - name: Verify Java 5 installation
+              run: java -version
+            
+            - name: Install apache ant 1.8.4
+              run: |
+                wget https://archive.apache.org/dist/ant/binaries/apache-ant-1.8.4-bin.tar.gz \
+                && tar -xzf ./apache-ant-1.8.4-bin.tar.gz -C /opt/ \
+                && ln -s /opt/apache-ant-1.8.4 /opt/ant \
+                && rm apache-ant-1.8.4-bin.tar.gz
+
+            - name: Setup Ant environment
+              run: |
+                echo "ANT_HOME=/opt/ant" >> $GITHUB_ENV
+                echo "PATH=$ANT_HOME/bin:$PATH" >> $GITHUB_ENV
+              shell: bash
+            
+            - name: Verify Ant installation
+              run: ant -version
+            
+            - name: Build with Ant
+              run: ant clean compile
+            
+            - name: Run Application
+              run: ant run

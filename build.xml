@@ -1,0 +1,29 @@
+<project name="JavaApp" default="compile" basedir=".">
+    
+    <!-- Define paths -->
+    <property name="src.dir" value="src"/>
+    <property name="build.dir" value="build"/>
+    
+    <!-- Clean task: cleans the build directory -->
+    <target name="clean">
+        <delete dir="${build.dir}"/>
+    </target>
+
+    <!-- Init task: creates the build directory -->
+    <target name="init">
+        <mkdir dir="${build.dir}"/>
+    </target>
+
+    <!-- Compile task: compiles Java source code -->
+    <target name="compile" depends="init">
+        <javac srcdir="${src.dir}" destdir="${build.dir}"/>
+    </target>
+
+    <!-- Run task: runs the compiled program -->
+    <target name="run" depends="compile">
+        <java classname="HelloWorld" fork="true">
+            <classpath path="${build.dir}"/>
+        </java>
+    </target>
+    
+</project>
