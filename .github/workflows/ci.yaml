@@ -46,7 +46,7 @@ jobs:
             
             - name: Build with Ant
               run: |
-                class="ts"ant clean compile
+                ant clean compile
                
             
             
@@ -55,7 +55,7 @@ jobs:
 
             - name: generate jar file
               run: |
-               class="ts"ant build-jar
+               ant build-jar
             # - name: Generate pom.xml file
             #   run: |
             #     cat <<\EOF >> pom.xml

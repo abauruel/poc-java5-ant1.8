@@ -46,17 +46,17 @@
         </java>
     </target>
     
-    <target name="build-jar" class="ts">
+    <target name="build-jar" >
         <jar 
             destfile="${web.dir}/lib/helloworld.jar"
             basedir="${build.dir}"
             includes=""
-            class="ts">
-            <manifest class="ts">
+            >
+            <manifest >
                 <attribute name="Main-Class" value="com.exemplo.helloworld"/>
-            </manifest class="ts">
-        </jar class="ts">
-    </target class="ts">
+            </manifest >
+        </jar >
+    </target >
 
 
 </project>
