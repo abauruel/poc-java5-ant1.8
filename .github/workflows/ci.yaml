@@ -141,7 +141,10 @@ jobs:
         env:
           maven_repository: https://maven.pkg.github.com/${{ github.repository }}
         permissions:
+          contents: read
           packages: write
+          attestations: write
+          id-token: write
 
         steps:
           - name: Download artifact
@@ -159,7 +162,7 @@ jobs:
                     <server>
                       <id>github</id>
                       <username>${{ github.actor }}</username>
-                      <password>${{ secrets.TOKEN }}</password>
+                      <password>${{ secrets.GITHUB_TOKEN }}</password>
                     </server>
                   </servers>
                   <profiles>
