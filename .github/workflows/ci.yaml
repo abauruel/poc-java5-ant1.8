@@ -1,4 +1,4 @@
-name: CI
+name: CI/CD
 on:
     push:
         branches: [main, develop]
@@ -12,13 +12,13 @@ jobs:
             - name: Checkout code
               uses: actions/checkout@v4
 
-            - name: Setup java 5
+            - name: Download and tar java 5 file
               run: |
                  chmod +x jdk-1_5_0_22-linux-amd64.bin 
                  ./jdk-1_5_0_22-linux-amd64.bin > /dev/null < <(echo yes)
                  tar -czf java-package.tar.gz ./jdk1.5.0_22
 
-            - name: Setup Java
+            - name: Setup Java 5 using tar file
               uses: actions/setup-java@v4
               with:
                 distribution: 'jdkfile'
@@ -33,26 +33,125 @@ jobs:
               run: |
                 wget https://archive.apache.org/dist/ant/binaries/apache-ant-1.8.4-bin.tar.gz \
                 && tar -xzf ./apache-ant-1.8.4-bin.tar.gz -C /opt/ \
-                && ln -s /opt/apache-ant-1.8.4 /opt/ant \
-                && rm apache-ant-1.8.4-bin.tar.gz 
+                && ln -s /opt/apache-ant-1.8.4 /opt/ant 
 
-            - name: Update PATH
+            - name: Update PATH with Ant
               run: |
                 echo "ANT_HOME=/opt/ant" >> $GITHUB_ENV
                 echo "PATH=$PATH:$ANT_HOME/bin" >> $GITHUB_ENV
 
             
-            - name: Verify Ant installation
+            - name: Verify Ant version
               run: ant -version
             
             - name: Build with Ant
-              run: ant clean compile
+              run: |
+                ant clear compile
+                ant jar
             
             - name: Run Application
               run: ant run
 
-            - name: Generate pom.xml file
-              run: |
+            # - name: Generate pom.xml file
+            #   run: |
+            #     cat <<\EOF >> pom.xml
+            #     <?xml version="1.0" encoding="UTF-8"?>
+            #     <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+            #         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+            #         <modelVersion>4.0.0</modelVersion>
+            #         <groupId>org.example</groupId>
+            #         <artifactId>hello-world</artifactId>
+            #         <version>1.0-SNAPSHOT</version>
+            #         <properties>
+            #             <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+            #         </properties>
+            #         <plugins>
+            #         <plugin>
+            #         <groupId>org.apache.maven.plugins</groupId>
+            #         <artifactId>maven-compiler-plugin</artifactId>
+            #         <version>3.1</version>
+            #         </plugin>
+            #         <plugin>
+            #             <groupId>org.apache.maven.plugins</groupId>
+            #             <artifactId>maven-toolchains-plugin</artifactId>
+            #             <version>1.1</version>
+            #             <executions>
+            #               <execution>
+            #                 <goals>
+            #                   <goal>toolchain</goal>
+            #                 </goals>
+            #               </execution>
+            #             </executions>
+            #             <configuration>
+            #               <toolchains>
+            #                 <jdk>
+            #                   <version>17</version>
+            #                   <vendor>openjdk</vendor>
+            #                 </jdk>
+            #               </toolchains>
+            #             </configuration>
+            #           </plugin>
+            #           </plugins>
+            #         <distributionManagement>
+            #           <repository>
+            #             <id>github</id>
+            #             <name>GitHub OWNER Apache Maven Packages</name>
+            #             <url>${{env.maven_repository}}</url>
+            #           </repository>
+            #         </distributionManagement>
+            #         </project>
+            #     EOF
+            # - name: Generate toolchains.xml file
+            #   run: |
+            #     cat <<\EOF >> toolchains.xml
+            #     <?xml version="1.0" encoding="UTF-8"?>
+            #     <toolchains>
+            #       <toolchain>
+            #       <type>jdk</type>
+            #       <provides>
+            #         <version>17</version>
+            #         <vendor>openjdk</vendor>
+            #       </provides>
+            #       <configuration>
+            #         <jdkHome>/opt/hostedtoolcache/Java/17.0.2</jdkHome>
+            #       </configuration>
+            #     </toolchain>
+
+            # - name: Setup Java
+            #   uses: actions/setup-java@v4
+            #   with:
+            #     distribution: 'temurin'
+            #     java-version: '17'
+
+            # - name: Verify new Java version
+            #   run: java -version
+
+            - name: Upload artifact
+              uses: actions/upload-artifact@v3
+              with:
+                name: hello-world
+                path: build/hello-world-1.0-SNAPSHOT.jar
+    deploy:
+        runs-on: ubuntu-latest
+        env:
+          maven_repository: https://maven.pkg.github.com/${{ github.repository }}
+        
+        steps:
+          - name: Download artifact
+            uses: actions/download-artifact@v3
+            with:
+              name: hello-world
+
+          - name: Setup Java
+            uses: actions/setup-java@v4
+            with:
+              distribution: 'temurin'
+              java-version: '17'
+              server-id: github
+              settings-path: ${{ github.workspace }}
+
+          - name: Generate pom.xml file
+            run: |
                 cat <<\EOF >> pom.xml
                 <?xml version="1.0" encoding="UTF-8"?>
                 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
@@ -64,33 +163,7 @@ jobs:
                     <properties>
                         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
                     </properties>
-                    <plugins>
-                    <plugin>
-                    <groupId>org.apache.maven.plugins</groupId>
-                    <artifactId>maven-compiler-plugin</artifactId>
-                    <version>3.1</version>
-                    </plugin>
-                    <plugin>
-                        <groupId>org.apache.maven.plugins</groupId>
-                        <artifactId>maven-toolchains-plugin</artifactId>
-                        <version>1.1</version>
-                        <executions>
-                          <execution>
-                            <goals>
-                              <goal>toolchain</goal>
-                            </goals>
-                          </execution>
-                        </executions>
-                        <configuration>
-                          <toolchains>
-                            <jdk>
-                              <version>17</version>
-                              <vendor>openjdk</vendor>
-                            </jdk>
-                          </toolchains>
-                        </configuration>
-                      </plugin>
-                      </plugins>
+                    
                     <distributionManagement>
                       <repository>
                         <id>github</id>
@@ -100,32 +173,12 @@ jobs:
                     </distributionManagement>
                     </project>
                 EOF
-            - name: Generate toolchains.xml file
-              run: |
-                cat <<\EOF >> toolchains.xml
-                <?xml version="1.0" encoding="UTF-8"?>
-                <toolchains>
-                  <toolchain>
-                  <type>jdk</type>
-                  <provides>
-                    <version>17</version>
-                    <vendor>openjdk</vendor>
-                  </provides>
-                  <configuration>
-                    <jdkHome>/opt/hostedtoolcache/Java/17.0.2</jdkHome>
-                  </configuration>
-                </toolchain>
 
-            - name: Setup Java
-              uses: actions/setup-java@v4
-              with:
-                distribution: 'temurin'
-                java-version: '17'
+          - name: verify maven version
+            run: mvn -version
 
-            - name: Verify new Java version
-              run: java -version
-              
-            - name: verify maven version
-              run: mvn -version
-            # - name: Publish
-            #   run: mvn deploy 
+          - name: Install Maven and package
+            run: mvn deploy
+            env: 
+              GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        
