@@ -61,7 +61,7 @@ jobs:
                       <repository>
                         <id>github</id>
                         <name>GitHub OWNER Apache Maven Packages</name>
-                        <url>${{maven_repository}}</url>
+                        <url>${{env.maven_repository}}</url>
                       </repository>
                     </distributionManagement>
                     </project>
