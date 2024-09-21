@@ -140,7 +140,9 @@ jobs:
         runs-on: ubuntu-latest
         env:
           maven_repository: https://maven.pkg.github.com/${{ github.repository }}
-        
+        permissions:
+          packages: write
+
         steps:
           - name: Download artifact
             uses: actions/download-artifact@v3
@@ -182,7 +184,7 @@ jobs:
           - name: verify maven version
             run: mvn -version
 
-          - name: Install Maven and package
+          - name: deploy package
             run: mvn deploy
             env: 
               GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
