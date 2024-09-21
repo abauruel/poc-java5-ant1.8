@@ -46,7 +46,7 @@ jobs:
             
             - name: Build with Ant
               run: |
-                ant clear compile
+                ant clean compile
                 ant jar
             
             - name: Run Application
