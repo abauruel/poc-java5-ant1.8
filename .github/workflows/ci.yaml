@@ -132,6 +132,7 @@ jobs:
                 name: hello-world
                 path: build/hello-world-1.0-SNAPSHOT.jar
     deploy:
+        needs: [build]
         runs-on: ubuntu-latest
         env:
           maven_repository: https://maven.pkg.github.com/${{ github.repository }}
