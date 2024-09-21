@@ -122,5 +122,7 @@ jobs:
                 distribution: 'temurin'
                 java-version: '17'
 
+            - name: Verify new Java version
+              run: java -version
             # - name: Publish
             #   run: mvn deploy 
