@@ -46,7 +46,7 @@ jobs:
             
             - name: Build with Ant
               run: |
-                ant clean compile
+                class="ts"ant clean compile
                
             
             
