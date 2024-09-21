@@ -152,48 +152,48 @@ jobs:
             with:
               name: hello-world
 
-          - name: Generate settings.xml file
-            run: |
-                cat <<\EOF >> settings.xml
-                <settings xmlns="http://maven.apache.org/SETTINGS/1.0.0"
-                  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-                  xsi:schemaLocation="http://maven.apache.org/SETTINGS/1.0.0 http://maven.apache.org/xsd/settings-1.0.0.xsd" >
-                  <servers>
-                    <server>
-                      <id>github</id>
-                      <username>${{ github.actor }}</username>
-                      <password>${{ secrets.GITHUB_TOKEN }}</password>
-                       <configuration>
-                        <httpHeaders>
-                          <property>
-                            <name>Authorization</name>
-                            <value>Bearer ${{ secrets.GITHUB_TOKEN }}</value>
-                          </property>
-                        </httpHeaders>
-                      </configuration>
-                    </server>
-                  </servers>
-                  <profiles>
-                  <profile>
-                    <id>github</id>
-                    <repositories>
-                      <repository>
-                        <id>github</id>
-                        <url>https://maven.pkg.github.com/${{ github.repository }}</url>
-                        <snapshots>
-                          <enabled>true</enabled>
-                        </snapshots>
-                      </repository>
-                    </repositories>
-                  </profile>
-                </profiles>
+          # - name: Generate settings.xml file
+          #   run: |
+          #       cat <<\EOF >> settings.xml
+          #       <settings xmlns="http://maven.apache.org/SETTINGS/1.0.0"
+          #         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+          #         xsi:schemaLocation="http://maven.apache.org/SETTINGS/1.0.0 http://maven.apache.org/xsd/settings-1.0.0.xsd" >
+          #         <servers>
+          #           <server>
+          #             <id>github</id>
+          #             <username>${{ github.actor }}</username>
+          #             <password>${{ secrets.GITHUB_TOKEN }}</password>
+          #              <configuration>
+          #               <httpHeaders>
+          #                 <property>
+          #                   <name>Authorization</name>
+          #                   <value>Bearer ${{ secrets.GITHUB_TOKEN }}</value>
+          #                 </property>
+          #               </httpHeaders>
+          #             </configuration>
+          #           </server>
+          #         </servers>
+          #         <profiles>
+          #         <profile>
+          #           <id>github</id>
+          #           <repositories>
+          #             <repository>
+          #               <id>github</id>
+          #               <url>https://maven.pkg.github.com/${{ github.repository }}</url>
+          #               <snapshots>
+          #                 <enabled>true</enabled>
+          #               </snapshots>
+          #             </repository>
+          #           </repositories>
+          #         </profile>
+          #       </profiles>
 
-                <activeProfiles>
-                  <!-- Ativar o perfil para o GitHub Packages -->
-                  <activeProfile>github</activeProfile>
-                </activeProfiles>
-                </settings>
-                EOF
+          #       <activeProfiles>
+          #         <!-- Ativar o perfil para o GitHub Packages -->
+          #         <activeProfile>github</activeProfile>
+          #       </activeProfiles>
+          #       </settings>
+          #       EOF
           - name: Setup Java
             uses: actions/setup-java@v4
             with:
@@ -201,7 +201,7 @@ jobs:
               java-version: '17'
               server-id: github
               settings-path: ${{ github.workspace }}
-              overwrite-settings: false
+            
 
           - name: Generate pom.xml file
             run: |
@@ -227,10 +227,16 @@ jobs:
                     </project>
                 EOF
 
+          - name: Maven settings
+            uses: s4b/maven-settings-action@v3.0.0
+            with:
+              servers: '[{"id": "github", "username": "${{ github.actor }}", "password": "${{ secrets.GITHUB_TOKEN }}", "configuration": {"httpHeaders": {"property": {"name": "Authorization","value": "Bearer ${{ secrets.GITHUB_TOKEN }}"}}}}]'
           - name: verify maven version
             run: mvn -version
-
+          
           - name: deploy package
-            run: mvn clean source:jar deploy -DuniqueVersion=false -Dmaven.source.useDefaultManifestFile=true -DdeployAtEnd=true -Dmaven.source.includePom=true -Dmaven.install.skip=true
+            run: mvn deploy
+          # - name: deploy package
+          #   run: mvn clean source:jar deploy -DuniqueVersion=false -Dmaven.source.useDefaultManifestFile=true -DdeployAtEnd=true -Dmaven.source.includePom=true -Dmaven.install.skip=true
             
         
