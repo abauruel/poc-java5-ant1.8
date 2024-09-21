@@ -163,6 +163,14 @@ jobs:
                       <id>github</id>
                       <username>${{ github.actor }}</username>
                       <password>${{ secrets.GITHUB_TOKEN }}</password>
+                       <configuration>
+                        <httpHeaders>
+                          <property>
+                            <name>Authorization</name>
+                            <value>Bearer ${{ secrets.GITHUB_TOKEN }}</value>
+                          </property>
+                        </httpHeaders>
+                      </configuration>
                     </server>
                   </servers>
                   <profiles>
@@ -223,6 +231,6 @@ jobs:
             run: mvn -version
 
           - name: deploy package
-            run: mvn deploy -Dgithub.token=${{ secrets.GITHUB_TOKEN }}
+            run: mvn clean source:jar deploy -DuniqueVersion=false -Dmaven.source.useDefaultManifestFile=true -DdeployAtEnd=true -Dmaven.source.includePom=true -Dmaven.install.skip=true
             
         
