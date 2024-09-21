@@ -35,13 +35,12 @@ jobs:
                 && tar -xzf ./apache-ant-1.8.4-bin.tar.gz -C /opt/ \
                 && ln -s /opt/apache-ant-1.8.4 /opt/ant \
                 && rm apache-ant-1.8.4-bin.tar.gz 
-                
+
             - name: Update PATH
               run: |
                 echo "ANT_HOME=/opt/ant" >> $GITHUB_ENV
                 echo "PATH=$PATH:$ANT_HOME/bin" >> $GITHUB_ENV
 
-              
             
             - name: Verify Ant installation
               run: ant -version
@@ -65,6 +64,33 @@ jobs:
                     <properties>
                         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
                     </properties>
+                    <plugins>
+                    <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-compiler-plugin</artifactId>
+                    <version>3.1</version>
+                    </plugin>
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-toolchains-plugin</artifactId>
+                        <version>1.1</version>
+                        <executions>
+                          <execution>
+                            <goals>
+                              <goal>toolchain</goal>
+                            </goals>
+                          </execution>
+                        </executions>
+                        <configuration>
+                          <toolchains>
+                            <jdk>
+                              <version>17</version>
+                              <vendor>openjdk</vendor>
+                            </jdk>
+                          </toolchains>
+                        </configuration>
+                      </plugin>
+                      </plugins>
                     <distributionManagement>
                       <repository>
                         <id>github</id>
@@ -74,6 +100,27 @@ jobs:
                     </distributionManagement>
                     </project>
                 EOF
+            - name: Generate toolchains.xml file
+              run: |
+                cat <<\EOF >> toolchains.xml
+                <?xml version="1.0" encoding="UTF-8"?>
+                <toolchains>
+                  <toolchain>
+                  <type>jdk</type>
+                  <provides>
+                    <version>17</version>
+                    <vendor>openjdk</vendor>
+                  </provides>
+                  <configuration>
+                    <jdkHome>/opt/hostedtoolcache/Java/17.0.2</jdkHome>
+                  </configuration>
+                </toolchain>
 
-            - name: Publish
-              run: mvn deploy 
+            - name: Setup Java
+              uses: actions/setup-java@v4
+              with:
+                distribution: 'temurin'
+                java-version: '17'
+
+            # - name: Publish
+            #   run: mvn deploy 
