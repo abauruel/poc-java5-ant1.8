@@ -6,6 +6,8 @@ on:
 jobs:
     build:
         runs-on: ubuntu-latest
+        env:
+            maven_repository: https://maven.pkg.github.com/${{ github.repository }}
         steps:
             - name: Checkout code
               uses: actions/checkout@v4
@@ -14,29 +16,24 @@ jobs:
               run: |
                  chmod +x jdk-1_5_0_22-linux-amd64.bin 
                  ./jdk-1_5_0_22-linux-amd64.bin > /dev/null < <(echo yes)
-                 mv jdk1.5.0_22 /opt/jdk1.5.0_22
+                 tar -cxf java-package.tar.gz jdk-1_5_0_22/ 
 
-            - name: Setup java 5 environment
-              run: |
-                 echo "JAVA_HOME=/opt/jdk1.5.0_22" >> $GITHUB_ENV
-                 echo "PATH=/opt/jdk1.5.0_22/bin:$PATH" >> $GITHUB_ENV
-              shell: bash
+            - name: Setup Java
+              uses: actions/setup-java@v4
+              with:
+                distribution: 'jdkfile'
+                java-version: '1.5'
+                jdkFile: ${{ github.workspace}}/java-package.tar.gz
+                architecture: x64
             
-            - name: Verify Java 5 installation
+            - name: Verify Java version
               run: java -version
             
-            - name: Install apache ant 1.8.4
-              run: |
-                wget https://archive.apache.org/dist/ant/binaries/apache-ant-1.8.4-bin.tar.gz \
-                && tar -xzf ./apache-ant-1.8.4-bin.tar.gz -C /opt/ \
-                && ln -s /opt/apache-ant-1.8.4 /opt/ant \
-                && rm apache-ant-1.8.4-bin.tar.gz
-
-            - name: Setup Ant environment
-              run: |
-                echo "ANT_HOME=/opt/ant" >> $GITHUB_ENV
-                echo "PATH=$ANT_HOME/bin:$PATH" >> $GITHUB_ENV
-              shell: bash
+            - name: Set up Ant
+              uses: cedx/setup-ant@v3
+              with:
+                optional-tasks: true
+                version: '1.8.4'
             
             - name: Verify Ant installation
               run: ant -version
@@ -46,3 +43,29 @@ jobs:
             
             - name: Run Application
               run: ant run
+
+            - name: Generate pom.xml file
+              run: |
+                cat <<EOF >pom.xml
+                <?xml version="1.0" encoding="UTF-8"?>
+                <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                    xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+                    <modelVersion>4.0.0</modelVersion>
+                    <groupId>org.example</groupId>
+                    <artifactId>hello-world</artifactId>
+                    <version>1.0-SNAPSHOT</version>
+                    <properties>
+                        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+                    </properties>
+                    <distributionManagement>
+                      <repository>
+                        <id>github</id>
+                        <name>GitHub OWNER Apache Maven Packages</name>
+                        <url>${{maven_repository}}</url>
+                      </repository>
+                    </distributionManagement>
+                    </project>
+                EOF
+
+            - name: Publish
+              run: mvn deploy 
