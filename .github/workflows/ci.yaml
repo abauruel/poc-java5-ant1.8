@@ -124,5 +124,8 @@ jobs:
 
             - name: Verify new Java version
               run: java -version
+              
+            - name: verify maven version
+              run: mvn -version
             # - name: Publish
             #   run: mvn deploy 
