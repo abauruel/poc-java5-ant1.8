@@ -159,7 +159,7 @@ jobs:
                     <server>
                       <id>github</id>
                       <username>${{ github.actor }}</username>
-                      <password>${{ secrets.GITHUB_TOKEN }}</password>
+                      <password>${{ secrets.TOKEN }}</password>
                     </server>
                   </servers>
                   <profiles>
