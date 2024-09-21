@@ -223,6 +223,6 @@ jobs:
             run: mvn -version
 
           - name: deploy package
-            run: mvn deploy 
+            run: mvn deploy -Dgithub.token=${{ secrets.GITHUB_TOKEN }}
             
         
