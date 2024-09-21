@@ -131,7 +131,7 @@ jobs:
             #   run: java -version
 
             - name: Upload artifact
-              uses: actions/upload-artifact@v3
+              uses: actions/upload-artifact@v4
               with:
                 name: hello-world
                 path: war/lib/helloworld.jar
@@ -193,7 +193,7 @@ jobs:
               java-version: '17'
               server-id: github
               settings-path: ${{ github.workspace }}
-              overwrite: false
+              overwrite-settings: false
 
           - name: Generate pom.xml file
             run: |
@@ -223,6 +223,6 @@ jobs:
             run: mvn -version
 
           - name: deploy package
-            run: mvn deploy -Dgithub.token=${{secrets.GITHUB_TOKEN}}
+            run: mvn deploy 
             
         
