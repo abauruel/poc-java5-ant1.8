@@ -47,7 +47,9 @@ jobs:
             - name: Build with Ant
               run: |
                 ant clean compile
-                ant jar
+               
+            - name: Verify Application
+              run: ls -l build/
             
             - name: Run Application
               run: ant run
