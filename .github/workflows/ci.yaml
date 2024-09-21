@@ -6,8 +6,6 @@ on:
 jobs:
     build:
         runs-on: ubuntu-latest
-        env:
-            maven_repository: https://maven.pkg.github.com/${{ github.repository }}
         steps:
             - name: Checkout code
               uses: actions/checkout@v4
@@ -141,10 +139,7 @@ jobs:
         env:
           maven_repository: https://maven.pkg.github.com/${{ github.repository }}
         permissions:
-          contents: read
           packages: write
-          attestations: write
-          id-token: write
 
         steps:
           - name: Download artifact
@@ -199,7 +194,6 @@ jobs:
             with:
               distribution: 'temurin'
               java-version: '17'
-              server-id: github
               settings-path: ${{ github.workspace }}
             
 
