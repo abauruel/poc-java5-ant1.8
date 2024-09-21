@@ -31,6 +31,7 @@
 
     <!-- Init task: creates the build directory -->
     <target name="init">
+        <mkdir dir="${web.dir}"/>
         <mkdir dir="${build.dir}"/>
     </target>
 
