@@ -48,12 +48,14 @@ jobs:
               run: |
                 ant clean compile
                
-            - name: Verify Application
-              run: ls -l build/
+            
             
             - name: Run Application
               run: ant run
 
+            - name: generate jar file
+              run: |
+               class="ts"ant build-jar
             # - name: Generate pom.xml file
             #   run: |
             #     cat <<\EOF >> pom.xml
@@ -132,7 +134,7 @@ jobs:
               uses: actions/upload-artifact@v3
               with:
                 name: hello-world
-                path: build/hello-world-1.0-SNAPSHOT.jar
+                path: war/lib/helloworld.jar
     deploy:
         needs: [build]
         runs-on: ubuntu-latest

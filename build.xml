@@ -2,11 +2,31 @@
     
     <!-- Define paths -->
     <property name="src.dir" value="src"/>
-    <property name="build.dir" value="build"/>
+    <property name="web.dir" value="war"/>
+    <property name="build.dir" value="${web.dir}/WEB-INF/classes"/>
     
+    <path id="master-classpath">
+        <fileset dir="${web.dir/WEB-INF/lib}">
+            <include name="*.jar"/>
+        </fileset>
+        <pathelement path="${build.dir}"/>
+    </path>
+
+    <target name="build" description="Compile source tree java files">
+      <mkdir dir="${build.dir}"/>
+      <javac destdir="${build.dir}" source="1.5" target="1.5">
+         <src path="${src.dir}"/>
+         <classpath refid="master-classpath"/>
+      </javac>
+   </target>
+
     <!-- Clean task: cleans the build directory -->
     <target name="clean">
-        <delete dir="${build.dir}"/>
+        <delete>
+         <fileset dir="${build.dir}">
+            <include name="**/*.class"/>
+         </fileset>
+      </delete>
     </target>
 
     <!-- Init task: creates the build directory -->
@@ -16,7 +36,7 @@
 
     <!-- Compile task: compiles Java source code -->
     <target name="compile" depends="init">
-        <javac srcdir="${src.dir}" destdir="${build.dir}"/>
+        <javac srcdir="${src.dir}" destdir="${build.dir}" includeantruntime="false"/>
     </target>
 
     <!-- Run task: runs the compiled program -->
@@ -26,4 +46,17 @@
         </java>
     </target>
     
+    <target name="build-jar" class="ts">
+        <jar 
+            destfile="${web.dir}/lib/helloworld.jar"
+            basedir="${build.dir}"
+            includes=""
+            class="ts">
+            <manifest class="ts">
+                <attribute name="Main-Class" value="com.exemplo.helloworld"/>
+            </manifest class="ts">
+        </jar class="ts">
+    </target class="ts">
+
+
 </project>
