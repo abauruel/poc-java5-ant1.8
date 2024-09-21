@@ -29,11 +29,13 @@ jobs:
             - name: Verify Java version
               run: java -version
             
-            - name: Set up Ant
-              uses: cedx/setup-ant@v3
-              with:
-                optional-tasks: true
-                version: '1.8.4'
+            - name: Install apache ant 1.8.4
+              run: |
+                wget https://archive.apache.org/dist/ant/binaries/apache-ant-1.8.4-bin.tar.gz \
+                && tar -xzf ./apache-ant-1.8.4-bin.tar.gz -C /opt/ \
+                && ln -s /opt/apache-ant-1.8.4 /opt/ant \
+                && rm apache-ant-1.8.4-bin.tar.gz
+              
             
             - name: Verify Ant installation
               run: ant -version
