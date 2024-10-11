@@ -79,17 +79,3 @@ jobs:
                 https://api.github.com/repos/${{env.organization}}/automation-central/issues \
                 -d '{"title":"UUID Mapping: ${{ env.unique_id }}","body":"**Unique ID:** ${{ env.unique_id }} **Repository:** ${{ github.repository }}","labels":["unique-id-mapping"]}'
               
-          
-
-            - name: Send mapping to central repository
-              env:
-                  GITHUB_TOKEN: ${{ secrets.TOKEN_PAT }}
-              run: |
-                  REPO_OWNER=$(echo "${{ github.repository }}" | cut -d'/' -f1)
-                  REPO_NAME=$(echo "${{ github.repository }}" | cut -d'/' -f2)
-                  curl -X POST \
-                    -H "Authorization: token $GITHUB_TOKEN" \
-                    -H "Content-Type: application/json" \
-                    -d "{\"unique_id\": \"${{ env.unique_id }}\", \"repository\": \"${{ github.repository }}\"}" \
-                    https://api.github.com/repos/$REPO_OWNER/automation-central/dispatches/mapping
-    
