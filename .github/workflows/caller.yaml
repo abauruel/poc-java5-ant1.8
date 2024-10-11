@@ -1,0 +1,8 @@
+name: Workflow caller
+on:
+    workflow_dispatch:
+
+jobs:
+    call-to-build: 
+        uses: abauruel/poc-java5-ant1.8/.github/workflows/ci.yaml@develop
+        secrets: inherit

@@ -1,0 +1,71 @@
+name: CD
+on:
+    repository_dispatch:
+        types: [callback_received]
+
+jobs:
+    deploy:
+        environment:
+          name: develop
+        runs-on: ubuntu-latest
+        env:
+          maven_repository: https://maven.pkg.github.com/${{ github.repository }}
+        permissions:
+          packages: write
+
+        steps:
+          - name: Log callback details
+            run: |
+                echo "Application: ${{ github.event.client_payload.application_name }}"
+                
+          - name: Download artifact
+            uses: actions/download-artifact@v4
+            with:
+              name: hello-world
+
+          
+          - name: Setup Java
+            uses: actions/setup-java@v4
+            with:
+              distribution: 'temurin'
+              java-version: '17'
+              settings-path: ${{ github.workspace }}
+            
+
+          - name: Generate pom.xml file
+            run: |
+                cat <<\EOF >> pom.xml
+                <?xml version="1.0" encoding="UTF-8"?>
+                <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                    xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+                    <modelVersion>4.0.0</modelVersion>
+                    <groupId>com.example</groupId>
+                    <artifactId>hello-world</artifactId>
+                    <version>1.0-SNAPSHOT</version>
+                    <properties>
+                        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+                    </properties>
+                    
+                    <distributionManagement>
+                      <repository>
+                        <id>github</id>
+                        <name>GitHub OWNER Apache Maven Packages</name>
+                        <url>${{env.maven_repository}}</url>
+                      </repository>
+                    </distributionManagement>
+                    </project>
+                EOF
+
+          - name: Maven settings
+            uses: s4u/maven-settings-action@v3.0.0
+            with:
+              servers: '[{"id": "github", "username": "${{ github.actor }}", "password": "${{ secrets.GITHUB_TOKEN }}", "configuration": {"httpHeaders": {"property": {"name": "Authorization","value": "Bearer ${{ secrets.GITHUB_TOKEN }}"}}}}]'
+          - name: verify maven version
+            run: mvn -version
+          
+          - name: deploy package
+            run: mvn deploy
+          # - name: deploy package
+          #   run: mvn clean source:jar deploy -DuniqueVersion=false -Dmaven.source.useDefaultManifestFile=true -DdeployAtEnd=true -Dmaven.source.includePom=true -Dmaven.install.skip=true
+            
+        
