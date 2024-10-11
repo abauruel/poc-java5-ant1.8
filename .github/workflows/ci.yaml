@@ -5,6 +5,8 @@ on:
 
 jobs:
     build:
+        environment:
+          - name: 'develop'
         runs-on: ubuntu-latest
         steps:
             - name: Checkout code
