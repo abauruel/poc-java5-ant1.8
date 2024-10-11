@@ -1,7 +1,6 @@
-name: CI
+name: CI/CD
 on:
-    push:
-        branches: [main]
+    workflow_call:
 
 jobs:
     build:
@@ -10,39 +9,86 @@ jobs:
             - name: Checkout code
               uses: actions/checkout@v4
 
-            - name: Setup java 5
+            - name: Download and tar java 5 file
               run: |
                  chmod +x jdk-1_5_0_22-linux-amd64.bin 
                  ./jdk-1_5_0_22-linux-amd64.bin > /dev/null < <(echo yes)
-                 mv jdk1.5.0_22 /opt/jdk1.5.0_22
+                 tar -czf java-package.tar.gz ./jdk1.5.0_22
 
-            - name: Setup java 5 environment
-              run: |
-                 echo "JAVA_HOME=/opt/jdk1.5.0_22" >> $GITHUB_ENV
-                 echo "PATH=/opt/jdk1.5.0_22/bin:$PATH" >> $GITHUB_ENV
-              shell: bash
+            - name: Setup Java 5 using tar file
+              uses: actions/setup-java@v4
+              with:
+                distribution: 'jdkfile'
+                java-version: '1.5'
+                jdkFile: ${{ github.workspace}}/java-package.tar.gz
+                architecture: x64
             
-            - name: Verify Java 5 installation
+            - name: Verify Java version
               run: java -version
             
             - name: Install apache ant 1.8.4
               run: |
                 wget https://archive.apache.org/dist/ant/binaries/apache-ant-1.8.4-bin.tar.gz \
                 && tar -xzf ./apache-ant-1.8.4-bin.tar.gz -C /opt/ \
-                && ln -s /opt/apache-ant-1.8.4 /opt/ant \
-                && rm apache-ant-1.8.4-bin.tar.gz
+                && ln -s /opt/apache-ant-1.8.4 /opt/ant 
 
-            - name: Setup Ant environment
+            - name: Update PATH with Ant
               run: |
                 echo "ANT_HOME=/opt/ant" >> $GITHUB_ENV
-                echo "PATH=$ANT_HOME/bin:$PATH" >> $GITHUB_ENV
-              shell: bash
+                echo "PATH=$PATH:$ANT_HOME/bin" >> $GITHUB_ENV
+
             
-            - name: Verify Ant installation
+            - name: Verify Ant version
               run: ant -version
             
             - name: Build with Ant
-              run: ant clean compile
+              run: |
+                ant clean compile
+               
+            
             
             - name: Run Application
               run: ant run
+
+            - name: generate jar file
+              run: |
+                ant build-jar
+
+            - name: Upload artifact
+              uses: actions/upload-artifact@v4
+              with:
+                name: hello-world
+                path: war/lib/helloworld.jar
+
+            - name: Generate unique identifier
+              id: generate_id
+              run: |
+                  UUID=$(uuidgen)
+                  REPO_OWNER=$(echo "${{ github.repository }}" | cut -d'/' -f1)
+                  echo "unique_id=${UUID}" >> $GITHUB_ENV
+                  echo "$UUID" > unique_id.txt
+                  echo "organization=${REPO_OWNER}" >> $GITHUB_ENV
+
+            - name: Create GitHub Issue for UUID Mapping
+              uses: peter-evans/create-issue@v4
+              with:
+                title: "UUID Mapping: ${{ env.unique_id }}"
+                body: |
+                  **Unique ID:** ${{ env.unique_id }}
+                  **Repository:** ${{ github.repository }}
+                labels: unique-id-mapping
+                repo: ${{env.organization}}/automation-central
+          
+
+            - name: Send mapping to central repository
+              env:
+                  GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+              run: |
+                  REPO_OWNER=$(echo "${{ github.repository }}" | cut -d'/' -f1)
+                  REPO_NAME=$(echo "${{ github.repository }}" | cut -d'/' -f2)
+                  curl -X POST \
+                    -H "Authorization: token $GITHUB_TOKEN" \
+                    -H "Content-Type: application/json" \
+                    -d "{\"unique_id\": \"${{ env.unique_id }}\", \"repository\": \"${{ github.repository }}\"}" \
+                    https://api.github.com/repos/$REPO_OWNER/automation-central/dispatches/mapping
+    
